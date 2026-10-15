@@ -64,9 +64,9 @@ function HomeWorksSection({title, linkLabel, href, opere, lang, alternate = fals
           <Link href={`/${lang}/${href}`} className="hidden text-[10px] uppercase tracking-[0.24em] text-black/55 transition-colors hover:text-black sm:block">{linkLabel} →</Link>
         </div>
         {opere.length ? (
-          <div className={`grid gap-px bg-black/15 sm:grid-cols-2 ${alternate ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
+          <div className={`grid sm:grid-cols-2 ${alternate ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
             {opere.map((opera, index) => (
-              <FadeIn key={opera._id} delay={index * 0.12} className={alternate ? 'bg-[#e5ddd0]' : 'bg-[#eee8dc]'}>
+              <FadeIn key={opera._id} delay={index * 0.12} className={`${alternate ? 'bg-[#e5ddd0]' : 'bg-[#eee8dc]'} border-b border-r border-black/15`}>
                 <Link href={`/${lang}/opere/${opera.slug || opera._id}`} className="group block p-4 pb-7">
                   <div className={`relative mb-5 overflow-hidden ${alternate ? 'aspect-video' : 'aspect-[4/5]'}`}>
                     {opera.immagine ? <Image
