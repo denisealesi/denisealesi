@@ -68,7 +68,7 @@ function HomeWorksSection({title, linkLabel, href, opere, lang, alternate = fals
             {opere.map((opera, index) => (
               <FadeIn key={opera._id} delay={index * 0.12} className={alternate ? 'bg-[#e5ddd0]' : 'bg-[#eee8dc]'}>
                 <Link href={`/${lang}/opere/${opera.slug || opera._id}`} className="group block p-4 pb-7">
-                  <div className={`relative mb-5 overflow-hidden bg-black/5 ${alternate ? 'aspect-video' : 'aspect-[4/5]'}`}>
+                  <div className={`relative mb-5 overflow-hidden ${alternate ? 'aspect-video' : 'aspect-[4/5]'}`}>
                     {opera.immagine ? <Image
                       src={opera.categoria === 'letteraria'
                         ? urlFor(opera.immagine).ignoreImageParams().width(900).url()
