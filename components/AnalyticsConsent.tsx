@@ -29,7 +29,9 @@ function getLanguage(pathname: string) {
 
 function ensureGoogleTag() {
   window.dataLayer = window.dataLayer || []
-  window.gtag = window.gtag || ((...args: unknown[]) => window.dataLayer.push(args))
+  window.gtag = window.gtag || function gtag(..._args: unknown[]) {
+    window.dataLayer.push(arguments)
+  }
   return window.gtag
 }
 
