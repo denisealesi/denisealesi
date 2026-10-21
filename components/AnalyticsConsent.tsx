@@ -17,9 +17,33 @@ const storageKey = 'denise-analytics-consent-v1'
 const cookieName = 'denise_analytics_consent'
 const consentEvent = 'denise:open-cookie-settings'
 const copy = {
-  it: {title: 'La tua privacy', description: 'Usiamo cookie analitici di Google Analytics solo con il tuo consenso, per capire come viene utilizzato il sito e migliorarlo. Puoi cambiare scelta in qualsiasi momento.', accept: 'Accetta analytics', reject: 'Rifiuta', google: 'Informazioni su Google Analytics'},
-  en: {title: 'Your privacy', description: 'We use Google Analytics cookies only with your consent, to understand how the website is used and improve it. You can change your choice at any time.', accept: 'Accept analytics', reject: 'Reject', google: 'About Google Analytics'},
-  es: {title: 'Tu privacidad', description: 'Usamos cookies analíticas de Google Analytics solo con tu consentimiento, para entender cómo se utiliza el sitio y mejorarlo. Puedes cambiar tu elección en cualquier momento.', accept: 'Aceptar analytics', reject: 'Rechazar', google: 'Información sobre Google Analytics'},
+  it: {
+    title: 'La tua privacy',
+    description: 'Le statistiche sulle visite ci aiutano a capire quali contenuti sono più utili e a migliorare il sito. Non usiamo questi dati per pubblicità o profilazione e non inviamo a Google nome, email o altre informazioni che ti identificano direttamente. Puoi disattivare Analytics con lo switch e cambiare scelta in qualsiasi momento.',
+    analytics: 'Cookie analitici',
+    enabled: 'Attivi',
+    disabled: 'Disattivati',
+    confirm: 'OK',
+    google: 'Informazioni su Google Analytics',
+  },
+  en: {
+    title: 'Your privacy',
+    description: 'Visit statistics help us understand which content is most useful and improve the website. We do not use this data for advertising or profiling, and we do not send Google your name, email address, or other information that directly identifies you. You can disable Analytics with the switch and change your choice at any time.',
+    analytics: 'Analytics cookies',
+    enabled: 'On',
+    disabled: 'Off',
+    confirm: 'OK',
+    google: 'About Google Analytics',
+  },
+  es: {
+    title: 'Tu privacidad',
+    description: 'Las estadísticas de visitas nos ayudan a entender qué contenidos son más útiles y a mejorar el sitio. No usamos estos datos para publicidad o elaboración de perfiles ni enviamos a Google tu nombre, correo electrónico u otra información que te identifique directamente. Puedes desactivar Analytics con el interruptor y cambiar tu elección en cualquier momento.',
+    analytics: 'Cookies analíticas',
+    enabled: 'Activas',
+    disabled: 'Desactivadas',
+    confirm: 'OK',
+    google: 'Información sobre Google Analytics',
+  },
 } as const
 
 function getLanguage(pathname: string) {
@@ -29,8 +53,8 @@ function getLanguage(pathname: string) {
 
 function ensureGoogleTag() {
   window.dataLayer = window.dataLayer || []
-  window.gtag = window.gtag || function gtag(..._args: unknown[]) {
-    window.dataLayer.push(arguments)
+  window.gtag = window.gtag || function gtag(...args: unknown[]) {
+    window.dataLayer.push(args)
   }
   return window.gtag
 }
@@ -66,6 +90,7 @@ export function AnalyticsConsent() {
   const measurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
   const pathname = usePathname()
   const [choice, setChoice] = useState<ConsentChoice | null>(null)
+  const [pendingChoice, setPendingChoice] = useState<ConsentChoice>('granted')
   const [isOpen, setIsOpen] = useState(false)
   const [analyticsReady, setAnalyticsReady] = useState(false)
   const text = copy[getLanguage(pathname)]
@@ -84,10 +109,14 @@ export function AnalyticsConsent() {
     const initialChoice = readSavedChoice()
     queueMicrotask(() => {
       setChoice(initialChoice)
+      setPendingChoice(initialChoice ?? 'granted')
       setIsOpen(initialChoice === null)
     })
     if (initialChoice) updateGoogleConsent(initialChoice)
-    const openSettings = () => setIsOpen(true)
+    const openSettings = () => {
+      setPendingChoice(readSavedChoice() ?? 'granted')
+      setIsOpen(true)
+    }
     window.addEventListener(consentEvent, openSettings)
     return () => window.removeEventListener(consentEvent, openSettings)
   }, [])
@@ -139,9 +168,24 @@ export function AnalyticsConsent() {
             <p className="mt-2 text-sm leading-6 text-white/75">{text.description}</p>
             <a href="https://business.safety.google/privacy/" target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs text-blue-300 underline underline-offset-4 hover:text-blue-200">{text.google}</a>
           </div>
-          <div className="flex shrink-0 flex-col gap-2 sm:flex-row md:flex-col">
-            <button type="button" onClick={() => saveChoice('granted')} className="rounded-full bg-white px-5 py-2.5 text-sm font-medium text-[#1c1d26] hover:bg-white/90">{text.accept}</button>
-            <button type="button" onClick={() => saveChoice('denied')} className="rounded-full border border-white/30 px-5 py-2.5 text-sm text-white hover:bg-white/10">{text.reject}</button>
+          <div className="flex shrink-0 flex-col gap-4 sm:min-w-56">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium">{text.analytics}</p>
+                <p className="mt-0.5 text-xs text-white/60">{pendingChoice === 'granted' ? text.enabled : text.disabled}</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={pendingChoice === 'granted'}
+                aria-label={text.analytics}
+                onClick={() => setPendingChoice((current) => current === 'granted' ? 'denied' : 'granted')}
+                className={`relative h-7 w-12 rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${pendingChoice === 'granted' ? 'bg-blue-500' : 'bg-white/25'}`}
+              >
+                <span className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${pendingChoice === 'granted' ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
+            <button type="button" onClick={() => saveChoice(pendingChoice)} className="rounded-full bg-white px-5 py-2.5 text-sm font-medium text-[#1c1d26] hover:bg-white/90">{text.confirm}</button>
           </div>
         </div>
       </div>
